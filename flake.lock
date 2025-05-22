@@ -1,0 +1,82 @@
+{
+  "nodes": {
+    "crane": {
+      "locked": {
+        "lastModified": 1747587869,
+        "narHash": "sha256-Zay3WJdSvC2VQmNqWSVLBOg/1iS/0/Q0c9JOBsB+3qw=",
+        "owner": "ipetkov",
+        "repo": "crane",
+        "rev": "76603d32f18e0e378d9f6335c8fc286413493655",
+        "type": "github"
+      },
+      "original": {
+        "owner": "ipetkov",
+        "repo": "crane",
+        "type": "github"
+      }
+    },
+    "hyper-mcp-src": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1746703749,
+        "narHash": "sha256-K8n1u6S2IfMvfmDg8hyUbe/bW48aKUMD9MyP1YcWyag=",
+        "owner": "tuananh",
+        "repo": "hyper-mcp",
+        "rev": "11841be81e7bcb88fe98d83215fb9e1ce4dcb9c7",
+        "type": "github"
+      },
+      "original": {
+        "owner": "tuananh",
+        "ref": "v0.1.2",
+        "repo": "hyper-mcp",
+        "type": "github"
+      }
+    },
+    "nixpkgs": {
+      "locked": {
+        "lastModified": 1747898664,
+        "narHash": "sha256-NIZEEy5MCBXmQJkMH1W+lRnrhNNJOxK4V4fh6CIV8j8=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "5f9f736accea595c20442646b7d24d5026a0ebc3",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "release-24.11",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "root": {
+      "inputs": {
+        "crane": "crane",
+        "hyper-mcp-src": "hyper-mcp-src",
+        "nixpkgs": "nixpkgs",
+        "rust-overlay": "rust-overlay"
+      }
+    },
+    "rust-overlay": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1747795013,
+        "narHash": "sha256-c7i0xJ+xFhgjO9SWHYu5dF/7lq63RPDvwKAdjc6VCE4=",
+        "owner": "oxalica",
+        "repo": "rust-overlay",
+        "rev": "6b1cf12374361859242a562e1933a7930649131a",
+        "type": "github"
+      },
+      "original": {
+        "owner": "oxalica",
+        "repo": "rust-overlay",
+        "type": "github"
+      }
+    }
+  },
+  "root": "root",
+  "version": 7
+}

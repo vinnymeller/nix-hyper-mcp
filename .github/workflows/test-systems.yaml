@@ -1,0 +1,88 @@
+name: Test Supported Systems
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'flake.nix'
+      - 'flake.lock'
+      - '**/*.nix'
+      - '.github/workflows/test.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'flake.nix'
+      - 'flake.lock'
+      - '**/*.nix'
+      - '.github/workflows/test.yml'
+
+jobs:
+  build-and-test:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            system: x86_64-linux
+          - os: ubuntu-24.04-arm
+            system: aarch64-linux
+          - os: macos-latest
+            system: aarch64-darwin
+
+    runs-on: ${{ matrix.os }}
+    permissions:
+      actions: write # For purging caches
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: nixbuild/nix-quick-install-action@v30
+
+      - name: Setup Cache
+        uses: nix-community/cache-nix-action@v6
+        with:
+          primary-key: nix-${{ matrix.system }}-${{ hashFiles('flake.lock', '**/*.nix') }}
+
+          restore-prefixes-first-match: |
+            nix-${{ matrix.system }}-
+            nix-${{ runner.os }}-
+
+          restore-prefixes-all-matches: |
+            nix-common-
+
+          gc-max-store-size-linux: 3G
+          gc-max-store-size-macos: 3G
+
+          purge: true
+          purge-prefixes: nix-${{ matrix.system }}-
+          purge-created: 604800  # 1 week
+          purge-primary-key: never
+
+      - name: Test Package
+        run: |
+          echo "Test: ${{ matrix.system }} package"
+          nix build .#packages."${{ matrix.system }}".default --no-link -L
+          pkg_path=$(nix path-info .#packages."${{ matrix.system }}".default)
+
+          echo "Running ${pkg_path}/bin/hyper-mcp -V"
+          "${pkg_path}/bin/hyper-mcp" -V
+
+          echo "PASS: ${{ matrix.system }} package"
+
+      - name: Test home-manager module
+        run: |
+          echo "Test: ${{ matrix.system }} home-manager"
+          nix build ./tests#homeConfigurations.test-${{ matrix.system }}.activationPackage --no-link -L
+          hm_path=$(nix path-info ./tests#homeConfigurations.test-${{ matrix.system }}.activationPackage)
+
+          if [ -f "${hm_path}/home-path/bin/hyper-mcp" ]; then
+            echo "PASS: Wrapped hyper-mcp binary found at ${hm_path}/home-path/bin/hyper-mcp"
+          else
+            echo >&2 "ERROR: No wrapped hyper-mcp binary found"
+            exit 1
+          fi
+
+          echo "PASS: ${{ matrix.system }} home-manager"
