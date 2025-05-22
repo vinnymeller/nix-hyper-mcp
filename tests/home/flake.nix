@@ -1,5 +1,5 @@
 {
-  description = "Test flake for hyper-mcp home-manager module";
+  description = "Test home flake";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/release-24.11?shallow=1";
@@ -7,7 +7,7 @@
       url = "github:nix-community/home-manager/release-24.11";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    hyper-mcp.url = "path:../.";
+    hyper-mcp.url = "path:../..";
   };
 
   outputs = { self, nixpkgs, home-manager, hyper-mcp, ... }:
@@ -39,14 +39,11 @@
 
                 programs.hyper-mcp = {
                   enable = true;
-                  transport = "stdio";
-                  plugins = [
-                    {
-                      name = "test-plugin";
-                      path = "test-path";
-                      runtime_config = { };
-                    }
-                  ];
+                  plugins = [{
+                    name = "fs";
+                    path = "oci://ghcr.io/tuananh/fs-plugin:latest";
+                    runtime_config.allowed_paths = [ "/tmp" ];
+                  }];
                 };
 
                 programs.home-manager.enable = true;

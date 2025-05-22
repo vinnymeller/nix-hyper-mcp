@@ -76,19 +76,11 @@
 
       sysAttrs = nixpkgs.lib.genAttrs systems perSysAttrs;
 
-    in
-    {
-      packages = nixpkgs.lib.genAttrs systems (system: sysAttrs.${system}.packages);
-
-      homeModules.default = { config, lib, pkgs, ... }:
+      mkModule = { packagesPath ? [ "environment" "systemPackages" ] }: { config, lib, pkgs, ... }:
         let
           cfg = config.programs.hyper-mcp;
-          _configFile =
-            if cfg.configFile != null then toString cfg.configFile
-            else "${config.xdg.configHome}/hyper-mcp/config.json";
-        in
-        {
-          options.programs.hyper-mcp = {
+
+          sharedOptions = {
             enable = lib.mkEnableOption "hyper-mcp";
             package = lib.mkOption {
               type = lib.types.package;
@@ -174,33 +166,45 @@
             };
           };
 
-          config = lib.mkIf cfg.enable {
-            xdg.configFile."hyper-mcp/config.json" = lib.mkIf (cfg.configFile == null) {
-              text = builtins.toJSON { inherit (cfg) plugins; };
-            };
+          _configFile =
+            if cfg.configFile != null
+            then toString cfg.configFile
+            else builtins.toFile "hyper-mcp-config.json" (builtins.toJSON { inherit (cfg) plugins; });
 
-            home.packages = [
-              (pkgs.runCommand "hyper-mcp-wrapped"
-                {
-                  buildInputs = [ pkgs.makeWrapper ];
-                }
-                ''
-                  mkdir -p $out/bin
-                  makeWrapper ${cfg.package}/bin/hyper-mcp $out/bin/hyper-mcp \
-                    --set RUST_LOG "''${RUST_LOG:-info}" \
-                    --add-flags "--config-file ${_configFile}" \
-                    ${lib.optionalString (cfg.transport != "stdio") "--add-flags '--transport ${cfg.transport}'"} \
-                    ${lib.optionalString (cfg.transport != "stdio" && cfg.bindAddress != null) "--add-flags '--bind-address ${cfg.bindAddress}'"} \
-                    ${lib.optionalString (cfg.insecureSkipSignature) "--add-flags '--insecure-skip-signature'"} \
-                    ${lib.optionalString (cfg.useSigstoreTufData) "--add-flags '--use-sigstore-tuf-data'"} \
-                    ${lib.optionalString (cfg.rekorPubKeys != null) "--add-flags '--rekor-pub-keys ${toString cfg.rekorPubKeys}'"} \
-                    ${lib.optionalString (cfg.fulcioCerts != null) "--add-flags '--fulcio-certs ${toString cfg.fulcioCerts}'"} \
-                    ${lib.optionalString (cfg.certIssuer != null) "--add-flags '--cert-issuer ${cfg.certIssuer}'"} \
-                    ${lib.optionalString (cfg.certEmail != null) "--add-flags '--cert-email ${cfg.certEmail}'"} \
-                    ${lib.optionalString (cfg.certUrl != null) "--add-flags '--cert-url ${cfg.certUrl}'"}
-                '')
-            ];
-          };
+          wrappedPackage = pkgs.runCommand "hyper-mcp-wrapped"
+            {
+              buildInputs = [ pkgs.makeWrapper ];
+            }
+            ''
+              mkdir -p $out/bin
+              makeWrapper ${cfg.package}/bin/hyper-mcp $out/bin/hyper-mcp \
+                --set RUST_LOG "''${RUST_LOG:-info}" \
+                --add-flags "--config-file ${_configFile}" \
+                ${lib.optionalString (cfg.transport != "stdio") "--add-flags '--transport ${cfg.transport}'"} \
+                ${lib.optionalString (cfg.transport != "stdio" && cfg.bindAddress != null) "--add-flags '--bind-address ${cfg.bindAddress}'"} \
+                ${lib.optionalString (cfg.insecureSkipSignature) "--add-flags '--insecure-skip-signature'"} \
+                ${lib.optionalString (cfg.useSigstoreTufData) "--add-flags '--use-sigstore-tuf-data'"} \
+                ${lib.optionalString (cfg.rekorPubKeys != null) "--add-flags '--rekor-pub-keys ${toString cfg.rekorPubKeys}'"} \
+                ${lib.optionalString (cfg.fulcioCerts != null) "--add-flags '--fulcio-certs ${toString cfg.fulcioCerts}'"} \
+                ${lib.optionalString (cfg.certIssuer != null) "--add-flags '--cert-issuer ${cfg.certIssuer}'"} \
+                ${lib.optionalString (cfg.certEmail != null) "--add-flags '--cert-email ${cfg.certEmail}'"} \
+                ${lib.optionalString (cfg.certUrl != null) "--add-flags '--cert-url ${cfg.certUrl}'"}
+            '';
+        in
+        {
+          options.programs.hyper-mcp = sharedOptions;
+
+          config = lib.mkIf cfg.enable (
+            lib.setAttrByPath packagesPath [ wrappedPackage ]
+          );
         };
+
+    in
+    {
+      packages = nixpkgs.lib.genAttrs systems (system: sysAttrs.${system}.packages);
+
+      homeModules.default = mkModule { packagesPath = [ "home" "packages" ]; };
+      nixosModules.default = mkModule { };
+      darwinModules.default = mkModule { };
     };
 }
