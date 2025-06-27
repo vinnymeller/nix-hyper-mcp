@@ -12,7 +12,7 @@
 
     hyper-mcp-src = {
       flake = false;
-      url = "github:tuananh/hyper-mcp/v0.1.2";
+      url = "github:tuananh/hyper-mcp/v0.1.3";
     };
   };
 

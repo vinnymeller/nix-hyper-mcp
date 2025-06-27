@@ -18,16 +18,16 @@
     "hyper-mcp-src": {
       "flake": false,
       "locked": {
-        "lastModified": 1746703749,
-        "narHash": "sha256-K8n1u6S2IfMvfmDg8hyUbe/bW48aKUMD9MyP1YcWyag=",
+        "lastModified": 1748149652,
+        "narHash": "sha256-F21M2yeSGmJwww8SixwIQcDO53lQgu756NBVjej5xzI=",
         "owner": "tuananh",
         "repo": "hyper-mcp",
-        "rev": "11841be81e7bcb88fe98d83215fb9e1ce4dcb9c7",
+        "rev": "908791a9e78cad86ac07b28e1572cd7be06af228",
         "type": "github"
       },
       "original": {
         "owner": "tuananh",
-        "ref": "v0.1.2",
+        "ref": "v0.1.3",
         "repo": "hyper-mcp",
         "type": "github"
       }
